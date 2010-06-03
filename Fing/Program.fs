@@ -1,20 +1,7 @@
 ﻿// Copyright (c) 2010, Nathan Sanders
 // Licence: New BSD. See accompanying documentation.
 module Main
-open Fing
-// Problems:
-// 1. Not clear which classes are visible to reflection
-//  (fails: System.Int32, System.Console, Microsoft.FSharp.Collections.HashSet [<T>|<'T>])
-// 2. Not clear how to add namespaces to unqualified types
-//  (aren't some of these abbreviations?
-//   is there a 'current' namespace where these can be looked up?)
-// 3. Does parsing of tuples, `nnn and arrow types work?
-//  (I need to test comprehensively each FParsec parser)
-// 4. I don't parse #seq<int>, for example ("flexible type")
-//  or delegate of int -> int ("stupid named delegate type")
-//  or int[]
-//  or int array / int list
-//  or int[,] / int[,,]
+
 let typedefpasses = ["<'a>"
                 ; "<'a,'b>"
                 ; "<'a,'b when 'a : null>"
@@ -125,14 +112,31 @@ let test () =
     ] *)
 [<EntryPoint>]
 let main args =
-  // printfn "%s" (find "('a -> Microsoft.FSharp.Core.bool) -> Microsoft.FSharp.Collections.list`1<'a> -> Microsoft.FSharp.Core.int" |> Seq.head)
-  // printfn "%s" (find "Microsoft.FSharp.Core.int -> Microsoft.FSharp.Core.int" |> Seq.head)
-  // test () |> Seq.iter (printfn "%A")
-  textSearch "('a -> bool) -> list<'a> -> 'a"
-  textSearch "int -> int"
-  textSearch "int -> int -> int"
-  textSearch "abs"
-  textSearch "tryFind"
-  textSearch "( ~~~ )"
-  // FSharpAssembly.FSharpLibrary.Entities |> Seq.iter (printfn "%A")
+  match args with
+  | [| t |] -> Fing.textSearch t
+  | _ -> printfn @"Fing is F# API Search.
+
+Usage:
+
+  fing ""F# type""
+  -OR-
+  fing ""F# function""
+
+Example:
+
+  fing ""int -> int""
+  fing ""('T -> bool) -> seq<'T> -> 'T option""
+  fing ""seq<'a> -> seq<'b> -> seq<'c> -> seq<'a * 'b * 'c>""
+  
+  fing abs
+  fing tryFind
+  fing ""( ~~~ )""
+  (NOTE: Parentheses and spaces are required for operators)
+  
+  
+For F# type syntax, refer to
+http://research.microsoft.com/en-us/um/cambridge/projects/fsharp/manual/spec.html
+or, for an introduction, see 
+http://lorgonblog.spaces.live.com/Blog/cns!701679AD17B6D310!1077.entry
+   "
   0
