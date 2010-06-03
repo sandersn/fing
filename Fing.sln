@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Fing", "Fing\Fing.fsproj", "{52A60CA3-FF6B-4E59-A606-C738D6D14281}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FingTest", "FingTest\FingTest.fsproj", "{A61F597A-6803-4754-9484-7B13A27B7193}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{52A60CA3-FF6B-4E59-A606-C738D6D14281}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{52A60CA3-FF6B-4E59-A606-C738D6D14281}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{52A60CA3-FF6B-4E59-A606-C738D6D14281}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{52A60CA3-FF6B-4E59-A606-C738D6D14281}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A61F597A-6803-4754-9484-7B13A27B7193}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A61F597A-6803-4754-9484-7B13A27B7193}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A61F597A-6803-4754-9484-7B13A27B7193}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A61F597A-6803-4754-9484-7B13A27B7193}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

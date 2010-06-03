@@ -1,0 +1,5 @@
+Y:\src\fing\fparsec\main\Build\VS9\bin\Debug\FParsec.dll
+Y:\src\fing\fparsec\main\Build\VS9\bin\Debug\FParsec.pdb
+Y:\src\fing\fparsec\main\Build\VS9\obj\Debug\ResolveAssemblyReference.cache
+Y:\src\fing\fparsec\main\Build\VS9\obj\Debug\FParsec.dll
+Y:\src\fing\fparsec\main\Build\VS9\obj\Debug\FParsec.pdb
