@@ -1,3 +1,39 @@
+Fing is F# API Search. It's based on the idea of Hoogle, although it is
+not a port. Fing has two uses. The obvious is to search for a function by name:
+
+> Fing.nameFind "abs";;
+
+But Fing is not really needed for this; Bing (or Google) will just do as well
+with "site:msdn.com abs". Although, it is nice for symbols:
+
+> Fing.nameFind "( ~~~ )";;
+
+Where Fing is really useful is when you are about to write something
+that is very likely to already exist in the standard library. Say you
+want a function that looks for an item in a list that satisfies some
+property and returns None if it can't find one. The type of this function is
+
+('a -> bool) -> list<'a> -> 'a option
+(the property)  (the list)  (the optional return value)
+
+So you say
+
+> Fing.textFind "('a -> bool) -> list<'a> -> 'a option";;
+
+('a -> bool) -> list<'a> -> 'a option
+Results:
+	List.tryFind		(('a -> bool) -> list<'a> -> option<'a>)
+	
+Fing has a full parser, so you can also search for:
+
+   ('a -> bool) -> 'a list -> 'a option
+
+Or even silly variants like:
+
+   (('a -> bool) -> ('a list) -> ('a option))
+   
+----
+
 This is the first release of Fing. It is very rudimentary and not really
 ready for public viewing.
 
@@ -15,9 +51,10 @@ interactive testing. This is really the only way to get answers besides
 editting Fing.main.
 
 Use 
- - Fing.find to return a list of results
+ - Fing.find to return a seq<string> of results
  - Fing.textFind to print a formatted list of results
- - Fing.nameFind to search for functions by name
+ - Fing.nameFind to search for functions by name 
+   ( : seq<Metadata.FSharpMemberOrVal> )
 
 Current shortcomings in the code:
  - Tests lag implementation -- I decided that I needed to stop delaying

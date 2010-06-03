@@ -15,6 +15,7 @@ let aliases =
      "list", "Microsoft.FSharp.Collections.FSharpList`1[T]"
      "float", "System.Double"
      "double", "System.Double"
+     "option", "Microsoft.FSharp.Core.FSharpOption`1[T]"
     ]
 let revMap m = Map.toSeq m |> Seq.map (fun (k,v) -> (v,k)) |> Map.ofSeq
 let unaliases = revMap aliases
