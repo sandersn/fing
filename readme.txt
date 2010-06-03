@@ -26,11 +26,11 @@ Results:
 	
 Fing has a full parser, so you can also search for:
 
-   ('a -> bool) -> 'a list -> 'a option
+   ('T -> bool) -> 'T list -> 'T option
 
 Or even silly variants like:
 
-   (('a -> bool) -> ('a list) -> ('a option))
+   (('foonly3000 -> bool) -> ('foonly3000 list) -> ('foonly3000 option))
    
 ----
 
