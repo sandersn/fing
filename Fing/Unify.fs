@@ -143,7 +143,7 @@ let find' s =
     for e in FSharpAssembly.FSharpLibrary.Entities do
     for m in e.MembersOrValues do
       (* need try/catch to avoid error on weird types like "[]`1" *)
-      match (try Some(Fing.cvt m.Type) with _ -> None) with
+      match (try Some(FSharpTypes.cvt m.Type) with _ -> None) with
       | Some ty2 ->
         (* rename all type variables from the query to avoid incorrectly unifying with type variables in signatures *)
         let used = usedVars ty2
@@ -152,7 +152,7 @@ let find' s =
                          if Set.contains (Normal v) used || Set.contains (Structural v) used
                          then Some(Var (Normal v))
                          else None)
-                       Fing.names
+                       Types.names
         //let ty = Map.fold (fun t v p -> subst v p t) ty varMap
         let ty = Map.foldBack subst (Map.ofSeq (Seq.zip vars newVars)) ty
         match ty <=> ty2 with

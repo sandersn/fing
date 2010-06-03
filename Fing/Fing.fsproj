@@ -46,6 +46,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Types.fs" />
+    <Compile Include="FSharpTypes.fs" />
+    <Compile Include="CSharpTypes.fs" />
+    <Compile Include="ParsedTypes.fs" />
     <Compile Include="Parser.fs" />
     <Compile Include="Fing.fs" />
     <Compile Include="Unify.fs" />

@@ -127,8 +127,11 @@ let main args =
   // printfn "%s" (find "('a -> Microsoft.FSharp.Core.bool) -> Microsoft.FSharp.Collections.list`1<'a> -> Microsoft.FSharp.Core.int" |> Seq.head)
   // printfn "%s" (find "Microsoft.FSharp.Core.int -> Microsoft.FSharp.Core.int" |> Seq.head)
   // test () |> Seq.iter (printfn "%A")
-  textFind "('a -> bool) -> list<'a> -> 'a"
-  textFind "int -> int"
-  textFind "int -> int -> int"
+  textSearch "('a -> bool) -> list<'a> -> 'a"
+  textSearch "int -> int"
+  textSearch "int -> int -> int"
+  textSearch "abs"
+  textSearch "tryFind"
+  textSearch "( ~~~ )"
   // FSharpAssembly.FSharpLibrary.Entities |> Seq.iter (printfn "%A")
   0

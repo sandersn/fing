@@ -58,6 +58,68 @@ and formatTypar = function
 | Choice typars -> "(" + String.concat " or " (Seq.map formatTypar typars) + ")"
 and formatConstraint = function
 | x -> x.ToString () // HA HA obviously not done
+
+/// an infinite stream of possible variable names - for nicely named de Bruijn indices
+#nowarn "40" // INFINITE SEQ IS INFINITE
+let rec names = // and that's OK.
+  let letters = ['a' .. 'z'] |> List.map string
+  seq {
+    yield! letters
+    for n in names do
+      for l in letters do
+        yield n + l
+  }
+// this is not really de Bruijn indexing but it is similar
+// in particular, I use state to make multi-parameter things like Arrow and Tuple
+// less painful to write; it's mapM in the State monad instead of fold over tuples.
+// also I don't use numbers, so that the output is a syntactically valid F# type.
+let rec index t = 
+  let nextIndex =
+    let names = names.GetEnumerator()
+    names.MoveNext() |> ignore // ignore: INFINITE SEQ.MoveNext is always true.
+    fun () ->
+      let name = names.Current
+      names.MoveNext() |> ignore
+      name
+  let indices = ref Map.empty
+  let rec update v =
+    match Map.tryFind v indices.Value with
+    | Some i -> i
+    | None -> let i = 
+                match v with
+                | Normal _ | Anonymous -> Normal (nextIndex ())
+                | Structural _ -> Structural (nextIndex ())
+                | Choice vars -> Choice (List.map update vars)
+              indices.Value <- Map.add v i indices.Value
+              i
+  let lookup v = Map.find v indices.Value
+  let rec indexer = function
+  | Var v -> Var (update v)
+  | Arrow types -> Arrow (List.map indexer types)
+  | Tuple types -> Tuple (List.map indexer types)
+  | Id id -> Id id
+  | NamedArg(n,t,opt) -> NamedArg(n, indexer t, opt)
+  | Generic(t,types) -> Generic(indexer t, List.map indexer types)
+  | Array(n,t) -> Array (n, indexer t)
+  | Constraint(var,t) -> let t' = indexer t
+                         Constraint(updateConstraint var, t')
+  // updateConstraint is not finished and definitely not tested
+  and updateConstraint = function
+  | Null var -> Null (lookup var)
+  | Struct var -> Struct (lookup var)
+  | NotStruct var -> NotStruct (lookup var)
+  | DefaultConstructor var -> DefaultConstructor (lookup var)
+  // TODO: not sure indexer is the Right Thing .. 
+  // even if it is, I might need to spawn a copy of indices good only in this scope
+  | Enum(var,t) -> Enum(lookup var, indexer t)
+  | Delegate(var,t,t') -> Delegate(lookup var, indexer t, indexer t')
+  | Subtype(var,t) -> Subtype(lookup var, indexer t)
+  | Sig(var,t,t',prop) -> Sig(lookup var, indexer t, indexer t',prop)
+  | TyparConstraint t -> TyparConstraint (indexer t)
+  indexer t
+
+// old kvb code. I think some of the code that uses this is still active,
+// so it won't compile unless this is left in
 type Tag<'ty> = | Toople | Arr | Ground of 'ty
 type Ty<'ty,'a> = 
   | Param of 'a 
