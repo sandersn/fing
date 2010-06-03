@@ -1,4 +1,7 @@
-﻿module Unify
+﻿// Copyright (c) 2010, Nathan Sanders
+// Licence: New BSD. See accompanying documentation.
+
+module Unify
 open Types
 open Parser
 open Microsoft.FSharp.Metadata

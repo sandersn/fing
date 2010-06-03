@@ -1,4 +1,7 @@
-﻿module Parser
+﻿// Copyright (c) 2010, Nathan Sanders
+// Licence: New BSD. See accompanying documentation.
+
+module Parser
 open Microsoft.FSharp.Metadata
 open System.Text.RegularExpressions
 open Types

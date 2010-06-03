@@ -1,4 +1,8 @@
-﻿/// code specific to types retrieved from FSharp.Powerpack.Metadata
+﻿// Copyright (c) 2010, Nathan Sanders
+// Licence: New BSD. See accompanying documentation.
+
+
+/// code specific to types retrieved from FSharp.Powerpack.Metadata
 module FSharpTypes
 open Microsoft.FSharp.Metadata
 open Types

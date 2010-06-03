@@ -1,4 +1,7 @@
-﻿module Fing
+﻿// Copyright (c) 2010, Nathan Sanders
+// Licence: New BSD. See accompanying documentation.
+
+module Fing
 open Microsoft.FSharp.Metadata
 open Types
 

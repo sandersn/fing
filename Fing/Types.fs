@@ -1,4 +1,7 @@
-﻿module Types
+﻿// Copyright (c) 2010, Nathan Sanders
+// Licence: New BSD. See accompanying documentation.
+
+module Types
 
 /// type aliases. Probably there is an existing list of these
 /// but for now I have just hard coded a few of my favourites

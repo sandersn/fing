@@ -1,4 +1,5 @@
-﻿// Learn more about F# at http://fsharp.net
+﻿// Copyright (c) 2010, Nathan Sanders
+// Licence: New BSD. See accompanying documentation.
 module Main
 open Fing
 // Problems:

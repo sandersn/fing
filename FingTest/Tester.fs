@@ -1,4 +1,6 @@
-﻿// Learn more about F# at http://fsharp.net
+﻿// Copyright (c) 2010, Nathan Sanders
+// Licence: New BSD. See accompanying documentation.
+
 module Tester
 open Types
 open NUnit.Framework

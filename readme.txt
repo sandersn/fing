@@ -46,7 +46,8 @@ ready for public viewing.
 However, because Git makes everything public immediately, here are some notes:
 
 The code depends on FParsec, which is included, and the FSharp Powerpack,
-which is not. It is released under the revised BSD licence.
+which is not. It is released under the new BSD licence. 
+See license.txt for details.
 
 It is not yet friendly for setup, so to make things work, you need to
 install the FSharp Powerpack. This is easy to find on Codeplex. Make sure

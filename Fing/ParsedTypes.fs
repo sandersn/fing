@@ -1,4 +1,8 @@
-﻿/// code specific to types parsed from user text
+﻿// Copyright (c) 2010, Nathan Sanders
+// Licence: New BSD. See accompanying documentation.
+
+
+/// code specific to types parsed from user text
 module ParsedTypes
 open Types
 
