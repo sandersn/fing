@@ -112,8 +112,12 @@ let test () =
     ] *)
 [<EntryPoint>]
 let main args =
-  match args with
-  | [| t |] -> Fing.textSearch t
+  let args,argmap = Opt.parse args
+  let getrefs s = Seq.choose id (Opt.mapGet s argmap Seq.empty)
+  let references = (getrefs "r" |>Seq.append<| getrefs "reference")
+  Fing.addReferences references
+  match Seq.toList args with
+  | [ t ] -> Fing.textSearch t
   | _ -> printfn @"Fing is F# API Search.
 
 Usage:
@@ -133,10 +137,15 @@ Example:
   fing ""( ~~~ )""
   (NOTE: Parentheses and spaces are required for operators)
   
+To reference assemblies besides FSharp.Core, use
+
+  fing -r Assembly.dll ""'a -> 'b""
+  -OR-
+  fing --reference:Assembly.dll ""'a -> 'b""
   
 For F# type syntax, refer to
-http://research.microsoft.com/en-us/um/cambridge/projects/fsharp/manual/spec.html
+  research.microsoft.com/en-us/um/cambridge/projects/fsharp/manual/spec.html
 or, for an introduction, see 
-http://lorgonblog.spaces.live.com/Blog/cns!701679AD17B6D310!1077.entry
+  lorgonblog.spaces.live.com/Blog/cns!701679AD17B6D310!1077.entry
    "
   0

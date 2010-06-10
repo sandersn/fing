@@ -12,7 +12,7 @@ let aliases =
      "bool", "System.Boolean"
      "string", "System.String"
      "char", "System.Char"
-     "set", "Microsoft.FSharp.Collections.FSharpSet`1[T]"
+     "Set", "Microsoft.FSharp.Collections.FSharpSet`1[T]"
      "map", "Microsoft.FSharp.Collections.FSharpMap`2[TKey,TValue]"
      "option", "Microsoft.FSharp.Collections.FSharpOption`1[T]"
      "list", "Microsoft.FSharp.Collections.FSharpList`1[T]"

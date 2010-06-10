@@ -20,18 +20,30 @@ let private matcher ty ty' =
 let private formatResult { ent = e; mem = m; typ = t } = 
   sprintf "%s.%s\t\t%s" e.DisplayName m.DisplayName (format t)
 // TODO: Cache this on disk or something
-let private core : seq<Result> = 
-  seq {
-    for e in FSharpAssembly.FSharpLibrary.Entities do
+let mutable private assemblies : Set<string> = Set.empty
+let mutable private types : seq<Result> = Seq.empty
+let private updateReferences (refs : seq<FSharpAssembly>) =
+  types <- seq {
+    for ref in Seq.append (Seq.singleton FSharpAssembly.FSharpLibrary) refs do
+    for e in ref.Entities do
     for m in e.MembersOrValues do
     yield try Some {ent=e; mem=m; typ=FSharpTypes.cvt m.Type |> index |> FSharpTypes.debinarize} 
           with _ -> None
   } |> Seq.choose id
+let addReferences news =
+  assemblies <- assemblies |>Set.union<| set news
+  let optionAssembly assemby =
+    try
+      FSharpAssembly.FromFile assemby |> Some
+    with
+      | :? System.IO.FileNotFoundException -> None
+      | :? System.ArgumentException -> None // Indicates a C# assembly, someday I'll handle this
+  updateReferences (Seq.choose id (Seq.map optionAssembly assemblies))
 let typeFind s =
   let ty = Parser.parse s |> index |> ParsedTypes.dealias
-  core |> Seq.filter (tipe >> matcher ty)
+  types |> Seq.filter (tipe >> matcher ty)
 let nameFind s = 
-  core |> Seq.filter (fun {mem = m} -> m.DisplayName = s)
+  types |> Seq.filter (fun {mem = m} -> m.DisplayName = s)
 let search (s : string) =
   if s.Contains "->" then typeFind s else nameFind s
 let textSearch s =
@@ -39,4 +51,5 @@ let textSearch s =
   printfn "Results:"
   Seq.iter (formatResult >> printfn "\t%s") (search s)
 let debug (m : FSharpMemberOrVal) =
+  FParsec.Internals.concat3 |> ignore
   FSharpTypes.cvt m.Type
