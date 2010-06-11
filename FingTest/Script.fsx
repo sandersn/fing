@@ -9,9 +9,26 @@
 #r @"FParsecCS.dll"
 //#r "Y:/src/Fing/fparsec/main/Build/VS9/bin/Debug/FParsecCS.dll"
 #load @"Y:\src\Fing\Fing\Types.fs"
+#load @"Y:\src\Fing\Fing\FSharpTypes.fs"
+#load @"Y:\src\Fing\Fing\CSharpTypes.fs"
+#load @"Y:\src\Fing\Fing\ParsedTypes.fs"
 #load @"Y:\src\Fing\Fing\Parser.fs"
 #load @"Y:\src\Fing\Fing\Fing.fs"
 // #load "Test.fs"
 open Types
-let test = Parser.parse >> Fing.index
-let at = Fing.debug (Seq.head (Fing.nameFind "abs"))
+let test = Parser.parse >> Types.index
+// TODO: Find out how to search for FParsec-local types
+// esp difficult ones, like the Parser<char,'u> type synonym
+// OK, turns out the problem is identifiers like
+// FParsec.Primitives+ReplyStatus
+// The parser dies on +
+// I don't know what the right entry method is for this
+// probably just ReplyStatusN
+let parsec = Microsoft.FSharp.Metadata.FSharpAssembly.FromFile @"Y:/src/Fing/Fing/bin/Debug/FParsec.dll"
+let ts = Seq.choose id (seq { 
+  for e in parsec.Entities do
+  for m in e.MembersOrValues do
+  yield try Some {Fing.ent=e; Fing.mem=m; Fing.typ=FSharpTypes.cvt m.Type |> Types.index |> FSharpTypes.debinarize} 
+        with _ -> None
+})
+let t = ts |> Seq.nth 35 |> Fing.tipe

@@ -9,7 +9,6 @@ let dearg = function
 | Parameter(_,arg) -> arg
 let mapGet key map value =
   if Map.containsKey key map then map.[key] else value
-type Opt = Map<string option, Argument list> // post-processing for now
 /// valid parameter forms:
 /// {-,/,--}param{ ,=,:}{(",')value(",')}
 ///

@@ -23,7 +23,11 @@ let rec canonicalType (e:FSharpEntity) =
   if (e.IsAbbreviation) then
     canonicalType e.AbbreviatedType.NamedEntity
   else
-    e.ReflectionType
+    let t = e.ReflectionType |> string
+    let denamespaced = t.Substring (t.IndexOf '+' + 1)
+    denamespaced |> Seq.takeWhile ((<>) '`')
+                 |> Array.ofSeq
+                 |> (fun s -> new string(s))
 let lookupType stype = FSharpAssembly.FSharpLibrary.GetEntity stype |> canonicalType
 
 let isArray (e:FSharpType) =
@@ -52,7 +56,7 @@ let rec cvt (e:FSharpType) =
   elif e |> isArray then // It only has in defaulting so far
     Array(dimensions e, e.GenericArguments |> Seq.map cvt |> Seq.head)
   else
-    let id = e.NamedEntity |> canonicalType |> string |> Id
+    let id = e.NamedEntity |> canonicalType |> Id
     match e.GenericArguments |> Seq.map cvt |> List.ofSeq with
     | [] -> id
     | args -> Generic(id, args)
@@ -61,7 +65,7 @@ and cvtParam (param:FSharpGenericParameter) =
     Var (Normal param.Name)
   else
     match param.Constraints |> Seq.tryFind (fun c -> c.IsDefaultsToConstraint) with
-    | Some def -> def.DefaultsToTarget.NamedEntity |> canonicalType |> string |> Id
+    | Some def -> def.DefaultsToTarget.NamedEntity |> canonicalType |> Id
     | None -> Var (Normal param.Name)
     // param.Constraints |> Seq.map whenify |> Seq.fold SOMETHING param
 and whenify (param:FSharpGenericParameter) (con:FSharpGenericParameterConstraint) =
