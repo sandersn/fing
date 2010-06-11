@@ -27,9 +27,10 @@ let private updateReferences (refs : seq<FSharpAssembly>) =
     for ref in Seq.append (Seq.singleton FSharpAssembly.FSharpLibrary) refs do
     for e in ref.Entities do
     for m in e.MembersOrValues do
-    yield try Some {ent=e; mem=m; typ=FSharpTypes.cvt m.Type |> index |> FSharpTypes.debinarize} 
-          with _ -> None
-  } |> Seq.choose id
+    yield //try Some
+          {ent=e; mem=m; typ=FSharpTypes.cvt m.Type |> index |> FSharpTypes.debinarize} 
+          //with _ -> None
+  } // |> Seq.choose id
 let addReferences news =
   assemblies <- assemblies |>Set.union<| set news
   let optionAssembly assemby =

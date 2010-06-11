@@ -23,10 +23,10 @@ let rec canonicalType (e:FSharpEntity) =
   if (e.IsAbbreviation) then
     canonicalType e.AbbreviatedType.NamedEntity
   else
-    let t = e.ReflectionType |> string
-    let denamespaced = t.Substring (t.IndexOf '+' + 1)
-    denamespaced |> Seq.takeWhile ((<>) '`')
-                 |> Array.ofSeq
+    let t = e.DisplayName // e.ReflectionType |> string
+    let denamespaced = t.Substring (t.IndexOf '+' + 1) // NOTE: denamespacing may not be
+    denamespaced |> Seq.takeWhile ((<>) '`') // needed if I use DisplayName instead of
+                 |> Array.ofSeq              // #ReflectionType >> string
                  |> (fun s -> new string(s))
 let lookupType stype = FSharpAssembly.FSharpLibrary.GetEntity stype |> canonicalType
 
@@ -64,7 +64,7 @@ and cvtParam (param:FSharpGenericParameter) =
   if Seq.isEmpty param.Constraints then
     Var (Normal param.Name)
   else
-    match param.Constraints |> Seq.tryFind (fun c -> c.IsDefaultsToConstraint) with
+    match param.Constraints |> Seq.tryFind (fun c -> c.IsDefaultsToConstraint && c.DefaultsToTarget.IsNamed) with
     | Some def -> def.DefaultsToTarget.NamedEntity |> canonicalType |> Id
     | None -> Var (Normal param.Name)
     // param.Constraints |> Seq.map whenify |> Seq.fold SOMETHING param

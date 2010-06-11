@@ -7,18 +7,21 @@ module Types
 /// but for now I have just hard coded a few of my favourites
 let aliases =
   Map.ofList 
-    ["int", "System.Int32"
-     "seq", "System.Collections.Generic.IEnumerable`1[T]"
-     "bool", "System.Boolean"
-     "string", "System.String"
-     "char", "System.Char"
-     "Set", "Microsoft.FSharp.Collections.FSharpSet`1[T]"
-     "map", "Microsoft.FSharp.Collections.FSharpMap`2[TKey,TValue]"
-     "option", "Microsoft.FSharp.Collections.FSharpOption`1[T]"
-     "list", "Microsoft.FSharp.Collections.FSharpList`1[T]"
-     "float", "System.Double"
-     "double", "System.Double"
-     "option", "Microsoft.FSharp.Core.FSharpOption`1[T]"
+    ["int", "Int32" //"System.Int32"
+     "obj", "Object"
+     "seq", "IEnumerable"// "System.Collections.Generic.IEnumerable`1[T]"
+     "bool", "Boolean" // "System.Boolean"
+     "string", "String" // "System.String"
+     "char", "Char" // "System.Char"
+     // TODO: I don't know whether lower case 'map' is a correct alias
+     //"Set", "Set" // "Microsoft.FSharp.Collections.FSharpSet`1[T]"
+     //"map", "Map" // "Microsoft.FSharp.Collections.FSharpMap`2[TKey,TValue]"
+     "option", "Option" //"Microsoft.FSharp.Collections.FSharpOption`1[T]"
+     "list", "List" // "Microsoft.FSharp.Collections.FSharpList`1[T]"
+     "float", "Double" // "System.Double"
+     "double", "Double" //"System.Double"
+     "option", "Option" //"Microsoft.FSharp.Core.FSharpOption`1[T]"
+     "unit", "Unit" // "Microsoft.FSharp.Core.Unit"
     ]
 let revMap m = Map.toSeq m |> Seq.map (fun (k,v) -> (v,k)) |> Map.ofSeq
 let unaliases = revMap aliases

@@ -17,18 +17,32 @@
 // #load "Test.fs"
 open Types
 let test = Parser.parse >> Types.index
-// TODO: Find out how to search for FParsec-local types
-// esp difficult ones, like the Parser<char,'u> type synonym
-// OK, turns out the problem is identifiers like
-// FParsec.Primitives+ReplyStatus
-// The parser dies on +
-// I don't know what the right entry method is for this
-// probably just ReplyStatusN
-let parsec = Microsoft.FSharp.Metadata.FSharpAssembly.FromFile @"Y:/src/Fing/Fing/bin/Debug/FParsec.dll"
-let ts = Seq.choose id (seq { 
+//let core = Microsoft.FSharp.Metadata.FSharpAssembly.FSharpLibrary
+let parsec = Microsoft.FSharp.Metadata.FSharpAssembly.FromFile "Y:/src/Fing/Fing/bin/Debug/FParsec.dll"
+let ts = seq { // Seq.choose id (seq { 
   for e in parsec.Entities do
   for m in e.MembersOrValues do
-  yield try Some {Fing.ent=e; Fing.mem=m; Fing.typ=FSharpTypes.cvt m.Type |> Types.index |> FSharpTypes.debinarize} 
-        with _ -> None
-})
-let t = ts |> Seq.nth 35 |> Fing.tipe
+  yield {Fing.ent=e; Fing.mem=m; Fing.typ=FSharpTypes.cvt m.Type |> Types.index |> FSharpTypes.debinarize} 
+}
+let rawts = seq {
+  for e in parsec.Entities do
+  for m in e.MembersOrValues do
+  yield m
+}
+//let t = ts |> Seq.nth 35 |> Fing.tipe
+//TODO: dies on i=45, citing 
+// "the type 'byref`1' does not have a qualified name
+let indices = 1 |> Seq.unfold (fun i -> Some(i, i+1))
+// look for the indices of things that fail in cvt
+Seq.zip indices rawts
+ |> Seq.iter (fun (i,t) ->
+  try
+    (FSharpTypes.cvt t.Type) |> ignore
+    printf "." 
+  with _ ->
+    printfn "%d: %s . %s" i t.LogicalEnclosingEntity.DisplayName t.DisplayName
+ )
+Seq.iter (Fing.tipe >> format >> printfn "%s") ts
+for i,t in Seq.zip indices ts do
+  printfn "%d: %s" i (format <| Fing.tipe t)
+  
