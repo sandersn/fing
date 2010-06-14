@@ -9,15 +9,14 @@
 #r @"FParsecCS.dll"
 //#r "Y:/src/Fing/fparsec/main/Build/VS9/bin/Debug/FParsecCS.dll"
 #load @"Y:\src\Fing\Fing\Types.fs"
+#load @"Y:\src\Fing\Fing\ParsedTypes.fs"
 #load @"Y:\src\Fing\Fing\FSharpTypes.fs"
 #load @"Y:\src\Fing\Fing\CSharpTypes.fs"
-#load @"Y:\src\Fing\Fing\ParsedTypes.fs"
 #load @"Y:\src\Fing\Fing\Parser.fs"
 #load @"Y:\src\Fing\Fing\Fing.fs"
 // #load "Test.fs"
 open Types
-let test = Parser.parse >> Types.index
-//let core = Microsoft.FSharp.Metadata.FSharpAssembly.FSharpLibrary
+// let core = Microsoft.FSharp.Metadata.FSharpAssembly.FSharpLibrary
 let parsec = Microsoft.FSharp.Metadata.FSharpAssembly.FromFile "Y:/src/Fing/Fing/bin/Debug/FParsec.dll"
 let ts = seq { // Seq.choose id (seq { 
   for e in parsec.Entities do
@@ -29,11 +28,9 @@ let rawts = seq {
   for m in e.MembersOrValues do
   yield m
 }
-//let t = ts |> Seq.nth 35 |> Fing.tipe
-//TODO: dies on i=45, citing 
-// "the type 'byref`1' does not have a qualified name
 let indices = 1 |> Seq.unfold (fun i -> Some(i, i+1))
 // look for the indices of things that fail in cvt
+// TODO: Turn this into a test
 Seq.zip indices rawts
  |> Seq.iter (fun (i,t) ->
   try
@@ -42,7 +39,7 @@ Seq.zip indices rawts
   with _ ->
     printfn "%d: %s . %s" i t.LogicalEnclosingEntity.DisplayName t.DisplayName
  )
-Seq.iter (Fing.tipe >> format >> printfn "%s") ts
+FParsec.Primitives.preturn
 for i,t in Seq.zip indices ts do
-  printfn "%d: %s" i (format <| Fing.tipe t)
+  printfn "%d. %s : %s" i (t.mem.DisplayName) (format <| Fing.tipe t)
   

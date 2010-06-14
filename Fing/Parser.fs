@@ -89,9 +89,9 @@ let constant a b = a
 ///////// start parsing! /////////
 let (typeP,typeref) = createParserForwardedToRef ()
 let (constraintP,conref) = createParserForwardedToRef ()
-let identP = notTok ["lazy"; "with"; "when"; "if"; "else"; "do"; "new"; "get"; "set"
-                    ; "<"; ">"; "["; "]"; "("; ")"; "#"; ":"; "?"; "->"; ","
-                    ; "-"; "*"; "'"; "_"; "^"]
+let identP = notTok ["lazy"; "with"; "when"; "if"; "else"; "do"; "new"; //"get"; "set"
+                     "<"; ">"; "["; "]"; "("; ")"; "#"; ":"; "?"; "->"; ","
+                     "-"; "*"; "'"; "_"; "^"]
 let tupleP = sepBy1 typeP (tok "*") |>> passthrough Tuple
 let arrowP = sepBy1 tupleP (tok "->") |>> passthrough Arrow
 let postfixP id = between (tok "<") (tok ">") (sepBy arrowP (tok ",")) |>> (cr Generic id)

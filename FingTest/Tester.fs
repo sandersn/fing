@@ -14,6 +14,117 @@ let failures = [
  "list<'a<'b>>"
  "'a 'a"  // same but with stupid suffix type
  ]
+// Later: I was thinking of Haskell's type system. F#'s is .NET's, which can't
+// do higher-kinded stuff. OH WELL, LIVING WITH MEDIOCRITY.
+let typedefpasses = ["<'a>"
+                ; "<'a,'b>"
+                ; "<'a,'b when 'a : null>"
+                ; "<'a,'b when 'a : (new : unit -> 'T)>"
+                ; "<'a,'b when 'a : struct>"
+                ; "<'a,'b when 'a : not struct>"
+                ; "<'a,'b when 'a : enum<int> >"
+                ; "<'a,'b when 'a : enum<int lazy> >"
+                ; "<'a,'b when 'a : delegate<int,dword> >"
+                ; "<'a,'b when 'a : (write : int->baz)>"
+                ; "<'a,'b when 'a : (write : foo:int->bar:baz)>"
+                ; "<'a,'b when 'a :> int>"
+                ; "<'a,'b when 'a :> int lazy>"
+                ; "<'a,'b when 'a : null and 'b : null>"
+                ; "<'a when 'a : null and 'a : null>"
+                ; "<'a,'b when 'a :> 'b>"
+                ; "<'a,'b when 'a : null and 'a :> 'b>"
+                ; "<'a when 'a : null and 'a :> 'b>"]
+let memberpasses = ["read : stream->int->string"
+                    ; "read : stream->int list->string"
+                    ; "read : stream->int lazy->string"
+                    ; "read : stream->list<int>->string"
+                    ; "read : stream->int[]->string"
+                    ; "read : stream->int[,,]->string"
+                    ; "read : stream->'a->string"
+                    ; "read : stream->'a when 'a : (read : int->string)->string"
+                    ; "read : string*stream->int"
+                    ; "read : ?foo:int->int"
+                    ; "read : ?foo:int->bar:int->int"
+                    ] @ [for t in typedefpasses -> "read"+t+" : 'a->'b"]
+let passes = ["int"
+             ; "int->int"
+             ; "int ->   int-> \t int"
+             ; "'a"
+             ; "int*int"
+             ; "int->int*int->int"
+             ; "int*int->int*int"
+             ; "'a->'a"
+             ; "'a*'a"
+             ; "_*^a"
+             ; "(int)"
+             ; "(int->int)"
+             ; "('a->'a)"
+             ; "('a*_)->(int->^a)"
+             ; "(((int)))"
+             ; "Microsoft.FSharp.Core.double"
+             ; "Microsoft.FSharp.Core.list`1"
+             ; "list"
+             ; "list<>"
+             ; "list<int>"
+             ; "list<int->int>"
+             ; "list<int*int>"
+             ; "list<int*(int->int*int)>"
+             ; "list<list<int>>"
+             ; "list<_>"
+             ; "list<_,_>"
+             ; "list<int,'a,_>"
+             ; "(int) lazy"
+             ; "(int->int) lazy"
+             ; "('a->'a) lazy"
+             ; "('a*_)->(int->^a) lazy"
+             ; "(('a*_)->(int->^a)) lazy"
+             ; "(((int))) lazy"
+             ; "Microsoft.FSharp.Core.double lazy"
+             ; "Microsoft.FSharp.Core.list`1 lazy"
+             ; "list lazy"
+             ; "list<'a> lazy"
+             ; "list lazy lazy"
+             ; "int list"
+             ; "int list lazy"
+             ; "int list list"
+             ; "int list list lazy"
+             ; "int[]"
+             ; "int[,]"
+             ; "int[,,,,,,,]"
+             ; "int[,] lazy"
+             ; "int[,,] lazy"
+             ; "list<'a> when 'a : null"
+             ; "list<'a> when 'a : null lazy"
+             ; "list<'a> lazy when 'a : null"
+             ; "list<'a> when 'a : (new : unit -> 'T)"
+             ; "list<'a> when 'a : struct"
+             ; "list<'a> when 'a : not struct"
+             ; "list<'a> when 'a : enum<int>"
+             ; "list<'a> when 'a : delegate<int,'a>"
+             ; "list<'a> when 'a :> Microsoft.Collections.IComparable"
+             ; "list<'a,'b> when 'a :> 'b"
+             ; "list<'a> when 'a : (read : string->int with get)"
+             ; "list<'a> when 'a : (read : string->int with set)"
+             ; "list<'a> when 'a : (read : string->int with get,set)"
+             ; "list<'a> when 'a : (read : string->int with set,get)"
+             ; "list<'a> when ('a or 'b) : (read : string->int->stream)"
+             ; "list<'a> when 'a : (read<'b,'c> : 'a -> 'b -> 'c)"
+             ] @ [for m in memberpasses -> "list<'a> when 'a : ("+m+")"
+             ] @ ["set<'a> -> list<'a>"]
+let test () = 
+  Seq.map Parser.parse passes
+    (*["'a";
+     "(Microsoft.FSharp.Core.int)"; 
+     "Microsoft.FSharp.Core.char"; 
+     "Microsoft.FSharp.Core.string";
+     "Microsoft.FSharp.Core.int * Microsoft.FSharp.Core.int";
+     "Microsoft.FSharp.Core.int * Microsoft.FSharp.Core.int * Microsoft.FSharp.Core.int";
+     "Microsoft.FSharp.Core.int * (Microsoft.FSharp.Core.int * Microsoft.FSharp.Core.int)";
+     "(Microsoft.FSharp.Core.int * Microsoft.FSharp.Core.int) * Microsoft.FSharp.Core.int";
+//     "Microsoft.FSharp.Collections.HashSet" 
+//     "System.Console"
+//     "Microsoft.FSharp.Collections.list`1<Microsoft.FSharp.Core.int>"
+    ] *) 
 let passresults =
  [Id "int"
  ;Arrow [Id "int"; Id "int"]
@@ -353,7 +464,9 @@ let passresults =
                Constraint (Null (Normal "a"),Var (Normal "a")))),
          Generic (Id "read",[Var (Normal "a")])),
       Arrow [Var (Normal "a"); Var (Normal "b")],Function),
-   Generic (Id "list",[Var (Normal "a")]))]
+   Generic (Id "list",[Var (Normal "a")]))
+ ;Arrow [Generic (Id "set", [Var (Normal "a")]);
+         Generic (Id "list", [Var (Normal "a")])]]
 let usedVarResults = 
   let e = Set.empty
   let a = Set.singleton (Normal "a")
@@ -397,10 +510,17 @@ let rec unboundVars env : Typ -> option<Set<Typar>> = function
 | _ -> None
 [<TestFixture>] 
 type public Tester() =
+  let core = Microsoft.FSharp.Metadata.FSharpAssembly.FSharpLibrary
+  // let parsec = Microsoft.FSharp.Metadata.FSharpAssembly.FromFile "Y:/src/Fing/Fing/bin/Debug/FParsec.dll"
+  let ts = seq {
+    for e in core.Entities do
+    for m in e.MembersOrValues do
+    yield {Fing.ent=e; Fing.mem=m; Fing.typ=FSharpTypes.cvt m.Type |> Types.index |> FSharpTypes.debinarize} 
+  }
   [<Test>]
   member public this.ParseTest() = 
-    Assert.AreEqual(List.length Main.passes, List.length passresults)
-    List.zip passresults (List.map Parser.parse Main.passes) |> List.iter Assert.AreEqual
+    Assert.AreEqual(List.length passes, List.length passresults)
+    List.zip passresults (List.map Parser.parse passes) |> List.iter Assert.AreEqual
   [<Test>]
   member this.UsedVarTest() =
     safezip usedVarResults passresults 
@@ -416,6 +536,16 @@ type public Tester() =
                       sprintf "%A" sub)
     substs |> Seq.iter t
     passresults |> Seq.iter t
+  /// Make sure that every function in FSharp.Core can be found if you at least search
+  /// for the exact type obtained from the FSharpType itself.
+  /// (argument-swapped tests will come later) 
+  [<Test>]
+  member this.SmokeTest() =
+    ts |> Seq.iter (fun t -> 
+                     Assert.AreEqual(Some t, 
+                                     Fing.typeFind (format t.typ) |> Seq.tryFind ((=) t),
+                                     t.mem.DisplayName + ":" + format t.typ))
+
 (*
 TODO: Order of practical tests:
 abs : 't -> 't (sans constraints)

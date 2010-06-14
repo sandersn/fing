@@ -18,23 +18,22 @@ let rec debinarize = function
 | Array(n,t) -> Array (n, debinarize t)
 | Constraint(var,t) -> Constraint(var, debinarize t) // might need to pass through to var someday
 | x -> x
-(* Gets something stable from an FSharpEntity so that we can see if two are identical *)
-let rec canonicalType (e:FSharpEntity) =
-  if (e.IsAbbreviation) then
-    canonicalType e.AbbreviatedType.NamedEntity
-  else
-    let t = e.DisplayName // e.ReflectionType |> string
-    let denamespaced = t.Substring (t.IndexOf '+' + 1) // NOTE: denamespacing may not be
-    denamespaced |> Seq.takeWhile ((<>) '`') // needed if I use DisplayName instead of
-                 |> Array.ofSeq              // #ReflectionType >> string
-                 |> (fun s -> new string(s))
-let lookupType stype = FSharpAssembly.FSharpLibrary.GetEntity stype |> canonicalType
+// TODO: I guess this is dead code
+// let lookupType stype = FSharpAssembly.FSharpLibrary.GetEntity stype |> canonicalType
 
 let isArray (e:FSharpType) =
   let name = e.NamedEntity.DisplayName
-  name.StartsWith "[" && name.EndsWith "]"
+  // it appears that DisplayName can either be array or []
+  // I think this is inconsistency on the part of either the Powerpack or (more likely)
+  // the F# runtime in allowing Set.ofArray : array<'t> -> Set<'t>
+  // while all the Array functions are eg : ('a -> 'b) -> 'a[] -> 'b[]
+  // OH WELL. Should work now
+  name = "array" || name.StartsWith "[" && name.EndsWith "]"
 /// e must be the FSharpType of an array
-let dimensions (e:FSharpType) = e.NamedEntity.DisplayName.Length - 1
+let dimensions (e:FSharpType) = 
+  match e.NamedEntity.DisplayName with
+  | "array" -> 1
+  | brackets -> brackets.Length - 1
 let tryFindConstraint (param:FSharpGenericParameter) (p,f) =
   match param.Constraints |> Seq.tryFind p with
   | Some(x) -> Some (f x)
@@ -56,18 +55,30 @@ let rec cvt (e:FSharpType) =
   elif e |> isArray then // It only has in defaulting so far
     Array(dimensions e, e.GenericArguments |> Seq.map cvt |> Seq.head)
   else
-    let id = e.NamedEntity |> canonicalType |> Id
-    match e.GenericArguments |> Seq.map cvt |> List.ofSeq with
-    | [] -> id
-    | args -> Generic(id, args)
+    match e.NamedEntity |> canonicalType, e.GenericArguments |> Seq.map cvt |> List.ofSeq with
+    | t,[] -> t
+    | Generic(t,_),args -> Generic(t,args)
+    | t,args -> Generic(t, args)
 and cvtParam (param:FSharpGenericParameter) =
   if Seq.isEmpty param.Constraints then
     Var (Normal param.Name)
   else
-    match param.Constraints |> Seq.tryFind (fun c -> c.IsDefaultsToConstraint && c.DefaultsToTarget.IsNamed) with
-    | Some def -> def.DefaultsToTarget.NamedEntity |> canonicalType |> Id
+    match param.Constraints 
+          |> Seq.tryFind (fun c -> c.IsDefaultsToConstraint 
+                                   && c.DefaultsToTarget.IsNamed) with
+    | Some def -> def.DefaultsToTarget.NamedEntity |> canonicalType
     | None -> Var (Normal param.Name)
     // param.Constraints |> Seq.map whenify |> Seq.fold SOMETHING param
+(* Gets something stable from an FSharpEntity so that we can see if two are identical *)
+and canonicalType (e:FSharpEntity) =
+  if e.IsAbbreviation then
+    cvt e.AbbreviatedType
+  else
+    // the dealias here is a hack because
+    // unit-of-measure types do not have IsAbbreviation set.
+    // TODO: I have no idea how to make this work once real alias detection
+    // is implemented, because it will (probably) be based on IsAbbreviation.
+    Id e.DisplayName |> ParsedTypes.dealias // e.ReflectionType |> string
 and whenify (param:FSharpGenericParameter) (con:FSharpGenericParameterConstraint) =
   // NOTE: This is missing several important (but non-syntactic) kinds of constraints
   // particuarly the defaults constraint
