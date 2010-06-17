@@ -201,7 +201,6 @@ let typevarChoiceP = parse {
   | _ -> failwith "Holy crap this program is crap"
 }  
 let typeSuffixP = choice [arrayP
-                         ; tok "lazy" |>> (fun _ t -> Generic (Id "lazy",[t]))
                          ; tok "when" >>. constraintP
                          ; (identP |>> (fun id t -> Generic (Id id,[t])))]
 let termP = between (tok "(") (tok ")") arrowP <|> typevarP <|> longidentP

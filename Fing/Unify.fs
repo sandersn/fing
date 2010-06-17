@@ -30,6 +30,7 @@ let rec subst' v t = function
 | Param j -> Param j
 (* substitute type t for variable v in the target type *)
 let rec subst v t = function
+| Var (Choice is) when is |> List.exists ((=) v) -> t
 | Var i when i = v -> t
 | Arrow types -> Arrow (List.map (subst v t) types)
 | Tuple types -> Tuple (List.map (subst v t) types)
@@ -47,7 +48,6 @@ let rec stringify = function // this function is cheesy because it's a hack and 
 | Choice vars -> Set.unionMany (List.map stringify vars)
 
 let rec usedVars = function // should be Typ -> Set<Typar> not Set<string>
-| Var (Choice vars) -> Set.ofList vars
 | Var v -> Set.singleton v
 | Arrow types -> Set.unionMany (List.map usedVars types)
 | Tuple types -> Set.unionMany (List.map usedVars types)
@@ -64,8 +64,6 @@ and usedConstraintVars = function
 | Enum(var,t) -> var |>Set.add<| usedVars t
 | Delegate(var,t,t') -> var |>Set.add<| usedVars t |>Set.union<| usedVars t'
 | Subtype(var,t) -> var |>Set.add<| usedVars t
-| Sig(Choice(vars),t,t',_) -> 
-  (Set.ofList vars) |>Set.union<| usedVars t |>Set.union<| usedVars t'
 | Sig(var,t,t',_) -> var |>Set.add<| usedVars t |>Set.union<| usedVars t'
 | TyparConstraint t -> usedVars t
 let rec usedVars' = function

@@ -4,6 +4,8 @@
 module Tester
 open Types
 open NUnit.Framework
+open System.Text.RegularExpressions
+
 let safezip l1 l2 = 
   let len = min (List.length l1) (List.length l2)
   Seq.zip (Seq.take len l1) (Seq.take len l2)
@@ -23,12 +25,12 @@ let typedefpasses = ["<'a>"
                 ; "<'a,'b when 'a : struct>"
                 ; "<'a,'b when 'a : not struct>"
                 ; "<'a,'b when 'a : enum<int> >"
-                ; "<'a,'b when 'a : enum<int lazy> >"
+                ; "<'a,'b when 'a : enum<int Lazy> >"
                 ; "<'a,'b when 'a : delegate<int,dword> >"
                 ; "<'a,'b when 'a : (write : int->baz)>"
                 ; "<'a,'b when 'a : (write : foo:int->bar:baz)>"
                 ; "<'a,'b when 'a :> int>"
-                ; "<'a,'b when 'a :> int lazy>"
+                ; "<'a,'b when 'a :> int Lazy>"
                 ; "<'a,'b when 'a : null and 'b : null>"
                 ; "<'a when 'a : null and 'a : null>"
                 ; "<'a,'b when 'a :> 'b>"
@@ -36,7 +38,7 @@ let typedefpasses = ["<'a>"
                 ; "<'a when 'a : null and 'a :> 'b>"]
 let memberpasses = ["read : stream->int->string"
                     ; "read : stream->int list->string"
-                    ; "read : stream->int lazy->string"
+                    ; "read : stream->int Lazy->string"
                     ; "read : stream->list<int>->string"
                     ; "read : stream->int[]->string"
                     ; "read : stream->int[,,]->string"
@@ -73,29 +75,29 @@ let passes = ["int"
              ; "list<_>"
              ; "list<_,_>"
              ; "list<int,'a,_>"
-             ; "(int) lazy"
-             ; "(int->int) lazy"
-             ; "('a->'a) lazy"
-             ; "('a*_)->(int->^a) lazy"
-             ; "(('a*_)->(int->^a)) lazy"
-             ; "(((int))) lazy"
-             ; "Microsoft.FSharp.Core.double lazy"
-             ; "Microsoft.FSharp.Core.list`1 lazy"
-             ; "list lazy"
-             ; "list<'a> lazy"
-             ; "list lazy lazy"
+             ; "(int) Lazy"
+             ; "(int->int) Lazy"
+             ; "('a->'a) Lazy"
+             ; "('a*_)->(int->^a) Lazy"
+             ; "(('a*_)->(int->^a)) Lazy"
+             ; "(((int))) Lazy"
+             ; "Microsoft.FSharp.Core.double Lazy"
+             ; "Microsoft.FSharp.Core.list`1 Lazy"
+             ; "list Lazy"
+             ; "list<'a> Lazy"
+             ; "list Lazy Lazy"
              ; "int list"
-             ; "int list lazy"
+             ; "int list Lazy"
              ; "int list list"
-             ; "int list list lazy"
+             ; "int list list Lazy"
              ; "int[]"
              ; "int[,]"
              ; "int[,,,,,,,]"
-             ; "int[,] lazy"
-             ; "int[,,] lazy"
+             ; "int[,] Lazy"
+             ; "int[,,] Lazy"
              ; "list<'a> when 'a : null"
-             ; "list<'a> when 'a : null lazy"
-             ; "list<'a> lazy when 'a : null"
+             ; "list<'a> when 'a : null Lazy"
+             ; "list<'a> Lazy when 'a : null"
              ; "list<'a> when 'a : (new : unit -> 'T)"
              ; "list<'a> when 'a : struct"
              ; "list<'a> when 'a : not struct"
@@ -156,39 +158,39 @@ let passresults =
  ;Generic (Id "list",[Var Anonymous])
  ;Generic (Id "list",[Var Anonymous; Var Anonymous])
  ;Generic (Id "list",[Id "int"; Var (Normal "a"); Var Anonymous])
- ;Generic (Id "lazy",[Id "int"])
- ;Generic (Id "lazy",[Arrow [Id "int"; Id "int"]])
- ;Generic (Id "lazy",[Arrow [Var (Normal "a"); Var (Normal "a")]])
+ ;Generic (Id "Lazy",[Id "int"])
+ ;Generic (Id "Lazy",[Arrow [Id "int"; Id "int"]])
+ ;Generic (Id "Lazy",[Arrow [Var (Normal "a"); Var (Normal "a")]])
  ;Arrow
   [Tuple [Var (Normal "a"); Var Anonymous];
-   Generic (Id "lazy",[Arrow [Id "int"; Var (Structural "a")]])]
+   Generic (Id "Lazy",[Arrow [Id "int"; Var (Structural "a")]])]
  ;Generic
-  (Id "lazy",
+  (Id "Lazy",
    [Arrow
       [Tuple [Var (Normal "a"); Var Anonymous];
        Arrow [Id "int"; Var (Structural "a")]]])
- ;Generic (Id "lazy",[Id "int"])
- ;Generic (Id "lazy",[Id "Microsoft.FSharp.Core.double"])
- ;Generic (Id "lazy",[Id "Microsoft.FSharp.Core.list`1"])
- ;Generic (Id "lazy",[Id "list"])
- ;Generic (Id "lazy",[Generic (Id "list",[Var (Normal "a")])])
- ;Generic (Id "lazy",[Generic (Id "lazy",[Id "list"])])
+ ;Generic (Id "Lazy",[Id "int"])
+ ;Generic (Id "Lazy",[Id "Microsoft.FSharp.Core.double"])
+ ;Generic (Id "Lazy",[Id "Microsoft.FSharp.Core.list`1"])
+ ;Generic (Id "Lazy",[Id "list"])
+ ;Generic (Id "Lazy",[Generic (Id "list",[Var (Normal "a")])])
+ ;Generic (Id "Lazy",[Generic (Id "Lazy",[Id "list"])])
  ;Generic (Id "list",[Id "int"])
- ;Generic (Id "lazy",[Generic (Id "list",[Id "int"])])
+ ;Generic (Id "Lazy",[Generic (Id "list",[Id "int"])])
  ;Generic (Id "list",[Generic (Id "list",[Id "int"])])
- ;Generic (Id "lazy",[Generic (Id "list",[Generic (Id "list",[Id "int"])])])
+ ;Generic (Id "Lazy",[Generic (Id "list",[Generic (Id "list",[Id "int"])])])
  ;Array (1,Id "int")
  ;Array (2,Id "int")
  ;Array (8,Id "int")
- ;Generic (Id "lazy",[Array (2,Id "int")])
- ;Generic (Id "lazy",[Array (3,Id "int")])
+ ;Generic (Id "Lazy",[Array (2,Id "int")])
+ ;Generic (Id "Lazy",[Array (3,Id "int")])
  ;Constraint (Null (Normal "a"),Generic (Id "list",[Var (Normal "a")]))
  ;Generic
-  (Id "lazy",
+  (Id "Lazy",
    [Constraint (Null (Normal "a"),Generic (Id "list",[Var (Normal "a")]))])
  ;Constraint
   (Null (Normal "a"),
-   Generic (Id "lazy",[Generic (Id "list",[Var (Normal "a")])]))
+   Generic (Id "Lazy",[Generic (Id "list",[Var (Normal "a")])]))
  ;Constraint
   (DefaultConstructor (Normal "a"),Generic (Id "list",[Var (Normal "a")]))
  ;Constraint (Struct (Normal "a"),Generic (Id "list",[Var (Normal "a")]))
@@ -237,7 +239,7 @@ let passresults =
  ;Constraint
   (Sig
      (Normal "a",Id "read",
-      Arrow [Id "stream"; Generic (Id "lazy",[Id "int"]); Id "string"],Function),
+      Arrow [Id "stream"; Generic (Id "Lazy",[Id "int"]); Id "string"],Function),
    Generic (Id "list",[Var (Normal "a")]))
  ;Constraint
   (Sig
@@ -345,7 +347,7 @@ let passresults =
       Constraint
         (TyparConstraint
            (Constraint
-              (Enum (Normal "a",Generic (Id "lazy",[Id "int"])),
+              (Enum (Normal "a",Generic (Id "Lazy",[Id "int"])),
                Var (Choice [Normal "a"; Normal "b"]))),
          Generic (Id "read",[Var (Normal "a"); Var (Normal "b")])),
       Arrow [Var (Normal "a"); Var (Normal "b")],Function),
@@ -404,7 +406,7 @@ let passresults =
       Constraint
         (TyparConstraint
            (Constraint
-              (Subtype (Normal "a",Generic (Id "lazy",[Id "int"])),
+              (Subtype (Normal "a",Generic (Id "Lazy",[Id "int"])),
                Var (Choice [Normal "a"; Normal "b"]))),
          Generic (Id "read",[Var (Normal "a"); Var (Normal "b")])),
       Arrow [Var (Normal "a"); Var (Normal "b")],Function),
@@ -472,6 +474,8 @@ let usedVarResults =
   let a = Set.singleton (Normal "a")
   let _a = Set.ofList [Anonymous;Normal "a"]
   let ab = Set.ofList [Normal "a";Normal "b"]
+  let aab = Set.add (Choice (List.ofSeq ab)) a
+  let abab = Set.add (Choice (List.ofSeq ab)) ab
   let _u = Set.singleton Anonymous
   [e;e;e; a; e;e;e; 
    a;a; Set.add (Structural "a") _u; e;e; a; 
@@ -479,9 +483,13 @@ let usedVarResults =
    _u; _u; _a; e; e; a; Set.add (Structural "a") _a; Set.add (Structural "a") _a; 
    e; e; e; e; a; e;e;e;e;e;e;e;e;e;e;
    a;a;a;a;a;a;a;a;a;
-   ab;a;a;a;a;ab; Set.add (Normal "c") ab
+   ab;a;a;a;a;aab; Set.add (Normal "c") ab
+   // memberpasses
    a;a;a;a;a;a;a;a;a;a;a;
-   ab;ab;ab;ab;ab;ab;ab;ab;ab;ab;ab;ab;ab;ab;ab;ab;ab]
+   // typedefpasses
+   ab;ab;abab;abab;abab;abab;abab;abab;abab;abab;abab;abab;abab;abab;ab; abab;abab;ab;
+   // new stuff
+   a]
 let substs =
   [Var (Normal "a")
   ;Var (Structural "a")
@@ -517,6 +525,16 @@ type public Tester() =
     for m in e.MembersOrValues do
     yield {Fing.ent=e; Fing.mem=m; Fing.typ=FSharpTypes.cvt m.Type |> Types.index |> FSharpTypes.debinarize} 
   }
+  let finder (t : Fing.Result) =
+    Fing.typeFind (format t.typ) |> Seq.tryFind ((=) t)
+  let arrayShuffle (ara : 'a[]) =
+    let rnd = System.Random()
+    for i in [ara.Length .. -1 .. 1] do
+      let j = rnd.Next i
+      let tmp = ara.[j]
+      ara.[j] <- ara.[i-1]
+      ara.[i-1] <- tmp
+    ara
   [<Test>]
   member public this.ParseTest() = 
     Assert.AreEqual(List.length passes, List.length passresults)
@@ -524,32 +542,49 @@ type public Tester() =
   [<Test>]
   member this.UsedVarTest() =
     safezip usedVarResults passresults 
-    |> Seq.iter (fun (exp,act) -> Assert.AreEqual(exp,Unify.usedVars act,sprintf "%A" act))
-  [<Test>]
-  member this.SubstTest() =
-    let replace a b set = if Set.contains a set 
-                          then Set.add b (Set.remove a set) 
-                          else set
-    let t sub =
-      Assert.AreEqual(replace (Normal "a") (Normal "e") (Unify.usedVars sub), 
-                      Unify.usedVars (Unify.subst (Normal "a") (Var (Normal "e")) sub),
-                      sprintf "%A" sub)
-    substs |> Seq.iter t
-    passresults |> Seq.iter t
+    |> Seq.iteri (fun i (exp,act) -> 
+                   Assert.AreEqual(exp,Unify.usedVars act,sprintf "%d. %A" i act))
+// Disabled until I decide this code is actually necessary (it's probably not)
+//  [<Test>]
+//  member this.SubstTest() =
+//    let replace a b set = if Set.contains a set 
+//                          then Set.add b (Set.remove a set) 
+//                          else set
+//    let t sub =
+//      Assert.AreEqual(replace (Normal "a") (Normal "e") (Unify.usedVars sub), 
+//                      Unify.usedVars (Unify.subst (Normal "a") (Var (Normal "e")) sub),
+//                      sprintf "%A" sub)
+//    substs |> Seq.iter t
+//    passresults |> Seq.iter t
   /// Make sure that every function in FSharp.Core can be found if you at least search
   /// for the exact type obtained from the FSharpType itself.
   /// (argument-swapped tests will come later) 
   [<Test>]
   member this.SmokeTest() =
     ts |> Seq.iter (fun t -> 
-                     Assert.AreEqual(Some t, 
-                                     Fing.typeFind (format t.typ) |> Seq.tryFind ((=) t),
+                     Assert.AreEqual(Some t, finder t,
                                      t.mem.DisplayName + ":" + format t.typ))
-
-(*
-TODO: Order of practical tests:
-abs : 't -> 't (sans constraints)
-Seq.zip : seq<'a> -> seq<'b> -> seq<'a*'b> (renaming/namespacing of aliases)
-abs : int -> int (with constraints, and renaming/namespacing of aliases)
-Seq.zip : IEnumerable<'a> -> IEnumerable<'b> -> IEnumerable<'a*'b> (denamespacing w/o dealiasing)
-*)
+  [<Test>]
+  member this.ShuffleSmokeTest() =
+    let shuffled = function
+    | Arrow ts when List.length ts > 2 -> 
+      let args,res = Fing.seqButLast ts
+      let args' = arrayShuffle (Array.ofSeq args) |> List.ofArray
+      Arrow (args' @ [res])
+    | t -> t
+    ts |> Seq.iter (fun t ->
+                     Assert.AreEqual(Some t,
+                                     finder t,
+                                     t.mem.DisplayName + ":" + format t.typ))
+[<TestFixture>]
+type public TypeTester() =
+  let dewhite s = Regex.Replace(s, @"\s+|\(|\)", "")
+  // TODO: I skipped the stupid aliasing stuff by mistake. That needs testing,
+  // if only to show how bad it is.
+  [<Test>]
+  member this.TestFormat() =
+    // TODO: Fails because formatConstraint is not finished.
+    //   Finish this next.
+    safezip passes passresults 
+    |> Seq.iteri (fun i (s,t) -> 
+         Assert.AreEqual(Parser.parse s, Types.format t |> Parser.parse, i.ToString()))
