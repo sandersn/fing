@@ -65,7 +65,7 @@ and usedConstraintVars = function
 | Delegate(var,t,t') -> var |>Set.add<| usedVars t |>Set.union<| usedVars t'
 | Subtype(var,t) -> var |>Set.add<| usedVars t
 | Sig(var,t,t',_) -> var |>Set.add<| usedVars t |>Set.union<| usedVars t'
-| TyparConstraint t -> usedVars t
+| TyparConstraint cons -> Set.unionMany (List.map usedConstraintVars cons)
 let rec usedVars' = function
 | Param i -> Set.singleton i;
 | Complex(tag, l) -> Set.unionMany (List.map usedVars' l)

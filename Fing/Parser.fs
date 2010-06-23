@@ -4,6 +4,7 @@
 module Parser
 open Microsoft.FSharp.Metadata
 open System.Text.RegularExpressions
+open Util
 open Types
 open FParsec.Primitives
 open FParsec.CharParsers
@@ -74,7 +75,6 @@ let tok s = tokeniser ((=) s) s
 let notTok ts = tokeniser (fun t -> not <| List.exists ((=) t) ts) "Non-keyword"
 /////////////
 // utils
-let cr f x y = f(x,y) 
 let passthrough t l = 
   match (t,l) with
   | _,[] -> failwith "This can't happen because it's sepBy_1_"
@@ -85,7 +85,6 @@ let devar t =
   | (Var var) -> var
   | _ -> failwith "Not a Var"  
 let nestTypes = List.fold (|>)
-let constant a b = a
 ///////// start parsing! /////////
 let (typeP,typeref) = createParserForwardedToRef ()
 let (constraintP,conref) = createParserForwardedToRef ()
@@ -135,12 +134,19 @@ let traitP var =
   let typevarDefnsP = parse {
     let! _ = tok "<"
     let! defns = sepBy1 typevarP (tok ",")
-    let! constraints = opt typevarConstraintsP
+    let! (constraints : option<list<Typ -> Typ>>) = opt typevarConstraintsP
     let! _ = tok ">"
-    match defns,constraints with
-    | _,None -> return (defns, None)
-    | [defn],Some(cs) -> return (defns, Some(nestTypes defn cs))
-    | defns,Some(cs) -> return (defns, Some(nestTypes (Var (Choice (List.map devar defns))) cs))
+    // TODO: This is the part to change: remove Var << Choice and call to nestTypes
+    // hopefully without destroying any semantics.
+    // 1. first apply the delayed constraints to a dummy type
+    // 2. then strip out the dummy type, leaving just the constraints
+    return (defns, constraints
+                   |> Option.map 
+                     (List.map ((|>) (Id "Dummy"))
+                      >> List.map (function
+                                   | Constraint(con,dummy) -> con
+                                   | _ -> failwith "constraint parser emitted non-constraint")))
+
   }
   let accessorsP =
     let getset = tok "get" >>. tok "," >>. tok "set" >>. preturn ()

@@ -8,23 +8,26 @@
 #r @"FParsec.dll"
 #r @"FParsecCS.dll"
 //#r "Y:/src/Fing/fparsec/main/Build/VS9/bin/Debug/FParsecCS.dll"
+#load @"Y:\src\Fing\Fing\Util.fs"
 #load @"Y:\src\Fing\Fing\Types.fs"
 #load @"Y:\src\Fing\Fing\ParsedTypes.fs"
 #load @"Y:\src\Fing\Fing\FSharpTypes.fs"
 #load @"Y:\src\Fing\Fing\CSharpTypes.fs"
 #load @"Y:\src\Fing\Fing\Parser.fs"
+#load @"Y:\src\Fing\Fing\Search.fs"
 #load @"Y:\src\Fing\Fing\Fing.fs"
-// #load "Test.fs"
+// #load "Tester.fs"
 open Types
-// let core = Microsoft.FSharp.Metadata.FSharpAssembly.FSharpLibrary
+open Util
+let core = Microsoft.FSharp.Metadata.FSharpAssembly.FSharpLibrary
 let parsec = Microsoft.FSharp.Metadata.FSharpAssembly.FromFile "Y:/src/Fing/Fing/bin/Debug/FParsec.dll"
 let ts = seq { // Seq.choose id (seq { 
-  for e in parsec.Entities do
+  for e in core.Entities do
   for m in e.MembersOrValues do
   yield {Fing.ent=e; Fing.mem=m; Fing.typ=FSharpTypes.cvt m.Type |> Types.index |> FSharpTypes.debinarize} 
 }
 let rawts = seq {
-  for e in parsec.Entities do
+  for e in core.Entities do
   for m in e.MembersOrValues do
   yield m
 }

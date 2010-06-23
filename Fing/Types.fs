@@ -2,7 +2,7 @@
 // Licence: New BSD. See accompanying documentation.
 
 module Types
-
+open Util
 /// type aliases. Probably there is an existing list of these
 /// but for now I have just hard coded a few of my favourites
 let aliases =
@@ -46,7 +46,7 @@ and When = Null of Typar
          | Delegate of Typar * Typ * Typ
          | Subtype of Typar * Typ
          | Sig of Typar * Typ * Typ * Property
-         | TyparConstraint of Typ // where Typ = Constraint
+         | TyparConstraint of list<When> // where Typ = Constraint
 let rec format = function
 | Arrow ts -> "(" + String.concat " -> " (Seq.map format ts) + ")"
 | Tuple ts -> "(" + String.concat " * " (Seq.map format ts) + ")"
@@ -56,6 +56,23 @@ let rec format = function
 | NamedArg (name,t,opt) -> (if opt then "?" else "") + name + ":" + format t
 | Generic (t,ts) -> format t + "<" + String.concat "," (Seq.map format ts) + ">"
 | Array(n,t) -> format t + "[" + String.replicate (n-1) "," + "]"
+// this ad-hockery doesn't work because the ignored _ of Constraint can
+// contain nested constraints, which have to be separated from the normal
+// 
+| Constraint(TyparConstraint cons,Generic(t,ts)) -> 
+  sprintf "%s<%s when %s>"
+    (format t)
+    (String.concat "," (Seq.map format ts))
+    (String.concat " and " (Seq.map formatConstraint cons))
+     // OLD NOTES:
+     // this almost works, except what you really want is to just extract
+     // the list of constraints, ignoring the variables they apply to
+     // (you already know that from the containing Sig)
+     // so REALLY the Right Thing is to change the type so that
+     // TyparConstraint returns a single list of constraints,
+     // and no Vars to which it applies, since it applies equally to
+     // all the vars of the sig it's a part of
+     // TODO: Change the types, the parser and everything else to handle this
 | Constraint(con,t) -> format t + " when " + formatConstraint con
 and formatTypar = function
 | Anonymous -> "_"
@@ -63,7 +80,26 @@ and formatTypar = function
 | Structural name -> "^" + name
 | Choice typars -> "(" + String.concat " or " (Seq.map formatTypar typars) + ")"
 and formatConstraint = function
-| x -> x.ToString () // HA HA obviously not done
+| Null v -> formatTypar v + " : null"
+| Struct v -> formatTypar v + " : struct"
+| NotStruct v -> formatTypar v + " : not struct"
+| DefaultConstructor v -> formatTypar v + " : (new : unit -> 'T)"
+| Enum(v,t) -> sprintf "%s : enum<%s>" (formatTypar v ) (format t)
+| Delegate(v,arg,res) -> 
+  sprintf "%s : delegate<%s,%s>" (formatTypar v) (format arg) (format res)
+| Subtype(v,t) -> formatTypar v + " :> " + format t
+| Sig(v,name,t,prop) -> sprintf "%s : (%s : %s%s)" 
+                          (formatTypar v) 
+                          (format name)
+                          (format t |> chompchomp)
+                          (formatProperty prop)
+| TyparConstraint cons ->
+  String.concat " and " (Seq.map formatConstraint cons)
+and formatProperty = function
+| Function -> ""
+| Get -> " with get"
+| Set -> " with set"
+| GetSet -> " with get,set"
 
 /// an infinite stream of possible variable names - for nicely named de Bruijn indices
 #nowarn "40" // INFINITE SEQ IS INFINITE
@@ -121,7 +157,7 @@ let rec index t =
   | Delegate(var,t,t') -> Delegate(lookup var, indexer t, indexer t')
   | Subtype(var,t) -> Subtype(lookup var, indexer t)
   | Sig(var,t,t',prop) -> Sig(lookup var, indexer t, indexer t',prop)
-  | TyparConstraint t -> TyparConstraint (indexer t)
+  | TyparConstraint cons -> TyparConstraint (List.map updateConstraint cons)
   indexer t
 
 // old kvb code. I think some of the code that uses this is still active,

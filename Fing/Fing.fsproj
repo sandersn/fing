@@ -45,12 +45,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Util.fs" />
     <Compile Include="Opt.fs" />
     <Compile Include="Types.fs" />
     <Compile Include="ParsedTypes.fs" />
     <Compile Include="FSharpTypes.fs" />
     <Compile Include="CSharpTypes.fs" />
     <Compile Include="Parser.fs" />
+    <Compile Include="Search.fs" />
     <Compile Include="Fing.fs" />
     <Compile Include="Unify.fs" />
     <Compile Include="Program.fs" />

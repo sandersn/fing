@@ -15,6 +15,11 @@ let failures = [
  "'a<'b>" // I .. uh .. think so?
  "list<'a<'b>>"
  "'a 'a"  // same but with stupid suffix type
+ // I'm pretty sure this should pass. It's probably related to the special cased parsing
+ // of 'a :> 'b, which I think has problems detecting the right edge
+ // ... maybe "and" isn't providing a strong enough right edge there.
+ // anyway, the error occurs any time that 'a :> 'b isn't the last type var constraint
+ "list<'a> when 'a : (read<'a,'b when 'a :> 'b and 'a : null> : 'a -> 'b)"
  ]
 // Later: I was thinking of Haskell's type system. F#'s is .NET's, which can't
 // do higher-kinded stuff. OH WELL, LIVING WITH MEDIOCRITY.
@@ -295,8 +300,63 @@ let passresults =
   (Sig
      (Normal "a",
       Constraint
-        (TyparConstraint
-           (Constraint (Null (Normal "a"),Var (Choice [Normal "a"; Normal "b"]))),
+        (TyparConstraint [Null (Normal "a")],
+         Generic (Id "read",[Var (Normal "a"); Var (Normal "b")])),
+      Arrow [Var (Normal "a"); Var (Normal "b")],Function),
+   Generic (Id "list",[Var (Normal "a")]))
+ ;Constraint
+  (Sig
+     (Normal "a",
+      Constraint
+        (TyparConstraint [DefaultConstructor (Normal "a")],
+         Generic (Id "read",[Var (Normal "a"); Var (Normal "b")])),
+      Arrow [Var (Normal "a"); Var (Normal "b")],Function),
+   Generic (Id "list",[Var (Normal "a")]))
+ ;Constraint
+  (Sig
+     (Normal "a",
+      Constraint
+        (TyparConstraint [Struct (Normal "a")],
+         Generic (Id "read",[Var (Normal "a"); Var (Normal "b")])),
+      Arrow [Var (Normal "a"); Var (Normal "b")],Function),
+   Generic (Id "list",[Var (Normal "a")]))
+ ;Constraint
+  (Sig
+     (Normal "a",
+      Constraint
+        (TyparConstraint [NotStruct (Normal "a")],
+         Generic (Id "read",[Var (Normal "a"); Var (Normal "b")])),
+      Arrow [Var (Normal "a"); Var (Normal "b")],Function),
+   Generic (Id "list",[Var (Normal "a")]))
+ ;Constraint
+  (Sig
+     (Normal "a",
+      Constraint
+        (TyparConstraint [Enum (Normal "a",Id "int")],
+         Generic (Id "read",[Var (Normal "a"); Var (Normal "b")])),
+      Arrow [Var (Normal "a"); Var (Normal "b")],Function),
+   Generic (Id "list",[Var (Normal "a")]))
+ ;Constraint
+  (Sig
+     (Normal "a",
+      Constraint
+        (TyparConstraint [Enum (Normal "a",Generic (Id "Lazy",[Id "int"]))],
+         Generic (Id "read",[Var (Normal "a"); Var (Normal "b")])),
+      Arrow [Var (Normal "a"); Var (Normal "b")],Function),
+   Generic (Id "list",[Var (Normal "a")]))
+ ;Constraint
+  (Sig
+     (Normal "a",
+      Constraint
+        (TyparConstraint [Delegate (Normal "a",Id "int",Id "dword")],
+         Generic (Id "read",[Var (Normal "a"); Var (Normal "b")])),
+      Arrow [Var (Normal "a"); Var (Normal "b")],Function),
+   Generic (Id "list",[Var (Normal "a")]))
+ ;Constraint
+  (Sig
+     (Normal "a",
+      Constraint
+        (TyparConstraint [Sig (Normal "a",Id "write",Arrow [Id "int"; Id "baz"],Function)],
          Generic (Id "read",[Var (Normal "a"); Var (Normal "b")])),
       Arrow [Var (Normal "a"); Var (Normal "b")],Function),
    Generic (Id "list",[Var (Normal "a")]))
@@ -305,9 +365,10 @@ let passresults =
      (Normal "a",
       Constraint
         (TyparConstraint
-           (Constraint
-              (DefaultConstructor (Normal "a"),
-               Var (Choice [Normal "a"; Normal "b"]))),
+              [Sig (Normal "a",Id "write",
+                    Arrow
+                      [NamedArg ("foo",Id "int",false);
+                       NamedArg ("bar",Id "baz",false)],Function)],
          Generic (Id "read",[Var (Normal "a"); Var (Normal "b")])),
       Arrow [Var (Normal "a"); Var (Normal "b")],Function),
    Generic (Id "list",[Var (Normal "a")]))
@@ -315,9 +376,7 @@ let passresults =
   (Sig
      (Normal "a",
       Constraint
-        (TyparConstraint
-           (Constraint
-              (Struct (Normal "a"),Var (Choice [Normal "a"; Normal "b"]))),
+        (TyparConstraint [Subtype (Normal "a",Id "int")],
          Generic (Id "read",[Var (Normal "a"); Var (Normal "b")])),
       Arrow [Var (Normal "a"); Var (Normal "b")],Function),
    Generic (Id "list",[Var (Normal "a")]))
@@ -325,9 +384,7 @@ let passresults =
   (Sig
      (Normal "a",
       Constraint
-        (TyparConstraint
-           (Constraint
-              (NotStruct (Normal "a"),Var (Choice [Normal "a"; Normal "b"]))),
+        (TyparConstraint [Subtype (Normal "a",Generic (Id "Lazy",[Id "int"]))],
          Generic (Id "read",[Var (Normal "a"); Var (Normal "b")])),
       Arrow [Var (Normal "a"); Var (Normal "b")],Function),
    Generic (Id "list",[Var (Normal "a")]))
@@ -335,9 +392,7 @@ let passresults =
   (Sig
      (Normal "a",
       Constraint
-        (TyparConstraint
-           (Constraint
-              (Enum (Normal "a",Id "int"),Var (Choice [Normal "a"; Normal "b"]))),
+        (TyparConstraint [Null (Normal "a"); Null (Normal "b")],
          Generic (Id "read",[Var (Normal "a"); Var (Normal "b")])),
       Arrow [Var (Normal "a"); Var (Normal "b")],Function),
    Generic (Id "list",[Var (Normal "a")]))
@@ -345,91 +400,7 @@ let passresults =
   (Sig
      (Normal "a",
       Constraint
-        (TyparConstraint
-           (Constraint
-              (Enum (Normal "a",Generic (Id "Lazy",[Id "int"])),
-               Var (Choice [Normal "a"; Normal "b"]))),
-         Generic (Id "read",[Var (Normal "a"); Var (Normal "b")])),
-      Arrow [Var (Normal "a"); Var (Normal "b")],Function),
-   Generic (Id "list",[Var (Normal "a")]))
- ;Constraint
-  (Sig
-     (Normal "a",
-      Constraint
-        (TyparConstraint
-           (Constraint
-              (Delegate (Normal "a",Id "int",Id "dword"),
-               Var (Choice [Normal "a"; Normal "b"]))),
-         Generic (Id "read",[Var (Normal "a"); Var (Normal "b")])),
-      Arrow [Var (Normal "a"); Var (Normal "b")],Function),
-   Generic (Id "list",[Var (Normal "a")]))
- ;Constraint
-  (Sig
-     (Normal "a",
-      Constraint
-        (TyparConstraint
-           (Constraint
-              (Sig (Normal "a",Id "write",Arrow [Id "int"; Id "baz"],Function),
-               Var (Choice [Normal "a"; Normal "b"]))),
-         Generic (Id "read",[Var (Normal "a"); Var (Normal "b")])),
-      Arrow [Var (Normal "a"); Var (Normal "b")],Function),
-   Generic (Id "list",[Var (Normal "a")]))
- ;Constraint
-  (Sig
-     (Normal "a",
-      Constraint
-        (TyparConstraint
-           (Constraint
-              (Sig
-                 (Normal "a",Id "write",
-                  Arrow
-                    [NamedArg ("foo",Id "int",false);
-                     NamedArg ("bar",Id "baz",false)],Function),
-               Var (Choice [Normal "a"; Normal "b"]))),
-         Generic (Id "read",[Var (Normal "a"); Var (Normal "b")])),
-      Arrow [Var (Normal "a"); Var (Normal "b")],Function),
-   Generic (Id "list",[Var (Normal "a")]))
- ;Constraint
-  (Sig
-     (Normal "a",
-      Constraint
-        (TyparConstraint
-           (Constraint
-              (Subtype (Normal "a",Id "int"),
-               Var (Choice [Normal "a"; Normal "b"]))),
-         Generic (Id "read",[Var (Normal "a"); Var (Normal "b")])),
-      Arrow [Var (Normal "a"); Var (Normal "b")],Function),
-   Generic (Id "list",[Var (Normal "a")]))
- ;Constraint
-  (Sig
-     (Normal "a",
-      Constraint
-        (TyparConstraint
-           (Constraint
-              (Subtype (Normal "a",Generic (Id "Lazy",[Id "int"])),
-               Var (Choice [Normal "a"; Normal "b"]))),
-         Generic (Id "read",[Var (Normal "a"); Var (Normal "b")])),
-      Arrow [Var (Normal "a"); Var (Normal "b")],Function),
-   Generic (Id "list",[Var (Normal "a")]))
- ;Constraint
-  (Sig
-     (Normal "a",
-      Constraint
-        (TyparConstraint
-           (Constraint
-              (Null (Normal "b"),
-               Constraint
-                 (Null (Normal "a"),Var (Choice [Normal "a"; Normal "b"])))),
-         Generic (Id "read",[Var (Normal "a"); Var (Normal "b")])),
-      Arrow [Var (Normal "a"); Var (Normal "b")],Function),
-   Generic (Id "list",[Var (Normal "a")]))
- ;Constraint
-  (Sig
-     (Normal "a",
-      Constraint
-        (TyparConstraint
-           (Constraint
-              (Null (Normal "a"),Constraint (Null (Normal "a"),Var (Normal "a")))),
+        (TyparConstraint [Null (Normal "a"); Null (Normal "a")],
          Generic (Id "read",[Var (Normal "a")])),
       Arrow [Var (Normal "a"); Var (Normal "b")],Function),
    Generic (Id "list",[Var (Normal "a")]))
@@ -437,10 +408,7 @@ let passresults =
   (Sig
      (Normal "a",
       Constraint
-        (TyparConstraint
-           (Constraint
-              (Subtype (Normal "a",Var (Normal "b")),
-               Var (Choice [Normal "a"; Normal "b"]))),
+        (TyparConstraint [Subtype (Normal "a",Var (Normal "b"))],
          Generic (Id "read",[Var (Normal "a"); Var (Normal "b")])),
       Arrow [Var (Normal "a"); Var (Normal "b")],Function),
    Generic (Id "list",[Var (Normal "a")]))
@@ -448,11 +416,7 @@ let passresults =
   (Sig
      (Normal "a",
       Constraint
-        (TyparConstraint
-           (Constraint
-              (Subtype (Normal "a",Var (Normal "b")),
-               Constraint
-                 (Null (Normal "a"),Var (Choice [Normal "a"; Normal "b"])))),
+        (TyparConstraint [Null (Normal "a"); Subtype (Normal "a",Var (Normal "b"))],
          Generic (Id "read",[Var (Normal "a"); Var (Normal "b")])),
       Arrow [Var (Normal "a"); Var (Normal "b")],Function),
    Generic (Id "list",[Var (Normal "a")]))
@@ -460,10 +424,7 @@ let passresults =
   (Sig
      (Normal "a",
       Constraint
-        (TyparConstraint
-           (Constraint
-              (Subtype (Normal "a",Var (Normal "b")),
-               Constraint (Null (Normal "a"),Var (Normal "a")))),
+        (TyparConstraint [Null (Normal "a"); Subtype (Normal "a",Var (Normal "b"))],
          Generic (Id "read",[Var (Normal "a")])),
       Arrow [Var (Normal "a"); Var (Normal "b")],Function),
    Generic (Id "list",[Var (Normal "a")]))
@@ -487,7 +448,7 @@ let usedVarResults =
    // memberpasses
    a;a;a;a;a;a;a;a;a;a;a;
    // typedefpasses
-   ab;ab;abab;abab;abab;abab;abab;abab;abab;abab;abab;abab;abab;abab;ab; abab;abab;ab;
+   ab;ab;ab;ab;ab;ab;ab;ab;ab;ab;ab;ab;ab;ab;ab; ab;ab;ab;
    // new stuff
    a]
 let substs =
@@ -516,6 +477,10 @@ let rec unboundVars env : Typ -> option<Set<Typar>> = function
   | vs when vs = Set.empty -> None
   | unbounds -> Some unbounds
 | _ -> None
+let testall (results : seq<'a*'a>) =
+  Seq.iteri (fun i (exp,act) ->
+               Assert.AreEqual(exp :> obj,act :> obj, sprintf "%d. %A" i act))
+            results
 [<TestFixture>] 
 type public Tester() =
   let core = Microsoft.FSharp.Metadata.FSharpAssembly.FSharpLibrary
@@ -525,8 +490,8 @@ type public Tester() =
     for m in e.MembersOrValues do
     yield {Fing.ent=e; Fing.mem=m; Fing.typ=FSharpTypes.cvt m.Type |> Types.index |> FSharpTypes.debinarize} 
   }
-  let finder (t : Fing.Result) =
-    Fing.typeFind (format t.typ) |> Seq.tryFind ((=) t)
+  let finder original (t : Fing.Result) =
+    Fing.typeFind (format t.typ) |> Seq.tryFind ((=) original)
   let arrayShuffle (ara : 'a[]) =
     let rnd = System.Random()
     for i in [ara.Length .. -1 .. 1] do
@@ -536,14 +501,10 @@ type public Tester() =
       ara.[i-1] <- tmp
     ara
   [<Test>]
-  member public this.ParseTest() = 
-    Assert.AreEqual(List.length passes, List.length passresults)
-    List.zip passresults (List.map Parser.parse passes) |> List.iter Assert.AreEqual
-  [<Test>]
   member this.UsedVarTest() =
-    safezip usedVarResults passresults 
-    |> Seq.iteri (fun i (exp,act) -> 
-                   Assert.AreEqual(exp,Unify.usedVars act,sprintf "%d. %A" i act))
+    safezip usedVarResults (List.map Unify.usedVars passresults) |> testall
+//    |> Seq.iteri (fun i (exp,act) -> 
+//                   Assert.AreEqual(exp,Unify.usedVars act,sprintf "%d. %A" i act))
 // Disabled until I decide this code is actually necessary (it's probably not)
 //  [<Test>]
 //  member this.SubstTest() =
@@ -558,33 +519,52 @@ type public Tester() =
 //    passresults |> Seq.iter t
   /// Make sure that every function in FSharp.Core can be found if you at least search
   /// for the exact type obtained from the FSharpType itself.
-  /// (argument-swapped tests will come later) 
   [<Test>]
   member this.SmokeTest() =
-    ts |> Seq.iter (fun t -> 
-                     Assert.AreEqual(Some t, finder t,
-                                     t.mem.DisplayName + ":" + format t.typ))
+    Seq.zip (Seq.map Some ts) (Seq.map2 finder ts ts) |> testall
   [<Test>]
   member this.ShuffleSmokeTest() =
-    let shuffled = function
-    | Arrow ts when List.length ts > 2 -> 
-      let args,res = Fing.seqButLast ts
+    // fails with "PrintfFormat<'b,'a> -> (string -> 'a) -> 'b"
+    let rec shuffled = function
+    | Arrow ts when List.length ts > 2  && List.length ts < 7 -> 
+      let args,res = Util.seqButLast (List.map shuffled ts)
       let args' = arrayShuffle (Array.ofSeq args) |> List.ofArray
       Arrow (args' @ [res])
+    | Tuple ts when List.length ts < 6 ->
+      Tuple (arrayShuffle (Array.ofSeq (List.map shuffled ts)) |> List.ofArray)
     | t -> t
-    ts |> Seq.iter (fun t ->
-                     Assert.AreEqual(Some t,
-                                     finder t,
-                                     t.mem.DisplayName + ":" + format t.typ))
+//    Seq.zip (Seq.map Some ts) 
+//            (Seq.map (fun t -> finder {t with typ = shuffled t.typ}) ts) 
+//    |> testall
+    ts |> Seq.iteri (fun i t ->
+                      let t' = {t with typ = shuffled t.typ }
+                      Assert.AreEqual(Some t,
+                                      finder t t',
+                                      sprintf "%d. %s: %s" i t.mem.DisplayName (format t'.typ)))
 [<TestFixture>]
 type public TypeTester() =
   let dewhite s = Regex.Replace(s, @"\s+|\(|\)", "")
-  // TODO: I skipped the stupid aliasing stuff by mistake. That needs testing,
-  // if only to show how bad it is.
   [<Test>]
   member this.TestFormat() =
-    // TODO: Fails because formatConstraint is not finished.
-    //   Finish this next.
-    safezip passes passresults 
-    |> Seq.iteri (fun i (s,t) -> 
-         Assert.AreEqual(Parser.parse s, Types.format t |> Parser.parse, i.ToString()))
+    safezip (List.map Parser.parse passes) 
+            (List.map (Types.format >> Parser.parse) passresults )
+    |> testall
+  member this.TestIndex() =
+    ()
+[<TestFixture>]
+type public ParseTester() =
+  [<Test>]
+  member public this.ParseTest() = 
+    Assert.AreEqual(List.length passes, List.length passresults)
+    testall (List.zip passresults (List.map Parser.parse passes))
+    List.zip passresults (List.map Parser.parse passes) 
+    |> List.iteri (fun i (exp,act) -> Assert.AreEqual(exp,act,sprintf "%d. %A" i act))
+type public ParsedTypeTester() =
+  [<Test>]
+  member this.TestDealias() =
+    // for all pass in passes, 
+    //  for all alias,t in Seq.zip (Parser.parse pass |> usedIds)
+    //                             (Parser.parse pass |> ParsedTypes.dealias |> usedIds),
+    //    if Types.aliases.ContainsKey alias then Types.aliases.[alias] = t else alias = t
+    // NOTE: usedIds must be written x_x
+    ()
