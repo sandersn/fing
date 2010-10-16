@@ -1,15 +1,15 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Fing", "Fing\Fing.fsproj", "{52A60CA3-FF6B-4E59-A606-C738D6D14281}"
-EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FingTest", "FingTest\FingTest.fsproj", "{A61F597A-6803-4754-9484-7B13A27B7193}"
-EndProject
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D1AEB2AC-CCE7-41F3-ACFD-3EA88F409FD0}"
 	ProjectSection(SolutionItems) = preProject
 		license.txt = license.txt
 		readme.txt = readme.txt
 	EndProjectSection
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Fing", "Fing\Fing.fsproj", "{52A60CA3-FF6B-4E59-A606-C738D6D14281}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FingTest", "FingTest\FingTest.fsproj", "{A61F597A-6803-4754-9484-7B13A27B7193}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
