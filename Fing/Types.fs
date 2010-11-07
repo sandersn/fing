@@ -23,7 +23,7 @@ let aliases =
      "option", "Option" //"Microsoft.FSharp.Core.FSharpOption`1[T]"
      "unit", "Unit" // "Microsoft.FSharp.Core.Unit"
     ]
-let revMap m = Map.toSeq m |> Seq.map (fun (k,v) -> (v,k)) |> Map.ofSeq
+let revMap = Map.toSeq >> Seq.map (fun (k,v) -> (v,k)) >> Map.ofSeq
 let unaliases = revMap aliases
 type Typar = Anonymous
            | Normal of string
@@ -101,6 +101,55 @@ and formatProperty = function
 | Set -> " with set"
 | GetSet -> " with get,set"
 
+let map f lookup =
+  let rec combiner t =
+    match f t with
+    | Some t' -> t'
+    | None ->
+      match t with
+      | Var v -> Var v
+      | Arrow types -> Arrow (List.map combiner types)
+      | Tuple types -> Tuple (List.map combiner types)
+      | Id id -> Id id
+      | NamedArg(n,t,opt) -> NamedArg(n, combiner t, opt)
+      | Generic(t,types) -> Generic(combiner t, List.map combiner types)
+      | Array(n,t) -> Array(n, combiner t)
+      | Constraint(var,t) -> let t' = combiner t
+                             Constraint(constraintCombiner var, t')
+  // TODO: constraintCombiner is not really done and definitely not tested
+  and constraintCombiner = function
+  | Null var -> Null (lookup var)
+  | Struct var -> Struct (lookup var)
+  | NotStruct var -> NotStruct (lookup var)
+  | DefaultConstructor var -> DefaultConstructor (lookup var)
+  // TODO: not sure combiner is the Right Thing .. 
+  // even if it is, I might need to spawn a copy of indices good only in this scope
+  | Enum(var,t) -> Enum(lookup var, combiner t)
+  | Delegate(var,t,t') -> Delegate(lookup var, combiner t, combiner t')
+  | Subtype(var,t) -> Subtype(lookup var, combiner t)
+  | Sig(var,t,t',prop) -> Sig(lookup var, combiner t, combiner t', prop)
+  | TyparConstraint cons -> TyparConstraint (List.map constraintCombiner cons)
+  combiner
+let fold next combine unit = 
+  let rec transformer t =
+    match next t with
+    | Some x -> x
+    | None ->
+      match t with
+      | Var _ -> unit
+      | Arrow types -> combine (List.map transformer types)
+      | Tuple types -> combine (List.map transformer types)
+      | Id _ -> unit
+      | NamedArg(_,t,_) -> transformer t
+      | Generic (t,types) ->
+        combine (transformer t :: List.map transformer types)
+      | Array(_,t) -> transformer t
+      | Constraint(var,t) ->
+        let x = transformer t
+        x // short-circuit Constraint processing for now;
+        // callers will have to provide next/combine/unit functions for it as well
+  transformer
+
 /// an infinite stream of possible variable names - for nicely named de Bruijn indices
 #nowarn "40" // INFINITE SEQ IS INFINITE
 let rec names = // and that's OK.
@@ -127,42 +176,20 @@ let rec index t =
   let rec update v =
     match Map.tryFind v indices.Value with
     | Some i -> i
-    | None -> let i = 
-                match v with
-                | Normal _ | Anonymous -> Normal (nextIndex ())
-                | Structural _ -> Structural (nextIndex ())
-                | Choice vars -> Choice (List.map update vars)
+    | None -> let i = match v with
+                      | Normal _ | Anonymous -> Normal (nextIndex ())
+                      | Structural _ -> Structural (nextIndex ())
+                      | Choice vars -> Choice (List.map update vars)
               indices.Value <- Map.add v i indices.Value
               i
+  let updateVar = function
+  | Var v -> Some (Var (update v))
+  | _ -> None
   let lookup v = Map.find v indices.Value
-  let rec indexer = function
-  | Var v -> Var (update v)
-  | Arrow types -> Arrow (List.map indexer types)
-  | Tuple types -> Tuple (List.map indexer types)
-  | Id id -> Id id
-  | NamedArg(n,t,opt) -> NamedArg(n, indexer t, opt)
-  | Generic(t,types) -> Generic(indexer t, List.map indexer types)
-  | Array(n,t) -> Array (n, indexer t)
-  | Constraint(var,t) -> let t' = indexer t
-                         Constraint(updateConstraint var, t')
-  // updateConstraint is not finished and definitely not tested
-  and updateConstraint = function
-  | Null var -> Null (lookup var)
-  | Struct var -> Struct (lookup var)
-  | NotStruct var -> NotStruct (lookup var)
-  | DefaultConstructor var -> DefaultConstructor (lookup var)
-  // TODO: not sure indexer is the Right Thing .. 
-  // even if it is, I might need to spawn a copy of indices good only in this scope
-  | Enum(var,t) -> Enum(lookup var, indexer t)
-  | Delegate(var,t,t') -> Delegate(lookup var, indexer t, indexer t')
-  | Subtype(var,t) -> Subtype(lookup var, indexer t)
-  | Sig(var,t,t',prop) -> Sig(lookup var, indexer t, indexer t',prop)
-  | TyparConstraint cons -> TyparConstraint (List.map updateConstraint cons)
-  indexer t
+  map updateVar lookup t
 
 // old kvb code. I think some of the code that uses this is still active,
 // so it won't compile unless this is left in
 type Tag<'ty> = | Toople | Arr | Ground of 'ty
-type Ty<'ty,'a> = 
-  | Param of 'a 
-  | Complex of Tag<'ty> * Ty<'ty,'a> list
+type Ty<'ty,'a> = Param of 'a 
+                | Complex of Tag<'ty> * Ty<'ty,'a> list

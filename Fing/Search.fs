@@ -27,7 +27,7 @@ let rec factorialOrder = function
 | l -> [for x,xs in roundRobin l do for ys in factorialOrder xs -> x::ys]
 let argOrder ts =
   if List.length ts = 2 then [ts]
-  else let args,ret = seqButLast ts
+  else let args,ret = Seq.butLast ts
        List.map (fun args -> args @ [ret]) (factorialOrder (List.ofSeq args))
 let rec variants : Typ -> Typ list = function
 | Arrow ts -> 

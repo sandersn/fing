@@ -12,6 +12,7 @@ type Result = {
   mem : FSharpMemberOrVal
   typ : Typ
 }
+
 let entite { ent = e } = e
 let membre { mem = m } = m
 let tipe { typ = t } = t

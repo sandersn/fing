@@ -7,19 +7,13 @@ module FSharpTypes
 open Microsoft.FSharp.Metadata
 open Types
 
-let rec debinarize = function
-| Arrow [t; Arrow ts] -> match debinarize (Arrow ts) with
-                         | Arrow ts -> Arrow (debinarize t::ts)
-                         | _ -> failwith "oh no"
-| Arrow types -> Arrow (List.map debinarize types)
-| Tuple types -> Tuple (List.map debinarize types)
-| NamedArg(n,t,opt) -> NamedArg(n, debinarize t, opt)
-| Generic(t,types) -> Generic(debinarize t, List.map debinarize types)
-| Array(n,t) -> Array (n, debinarize t)
-| Constraint(var,t) -> Constraint(var, debinarize t) // might need to pass through to var someday
-| x -> x
-// TODO: I guess this is dead code
-// let lookupType stype = FSharpAssembly.FSharpLibrary.GetEntity stype |> canonicalType
+let rec debinarize t =
+  let rec debinarise = function
+  | Arrow [t; Arrow ts] -> match debinarize (Arrow ts) with
+                           | Arrow ts -> Some (Arrow (debinarize t::ts))
+                           | _ -> failwith "oh no"
+  | _ -> None
+  Types.map debinarise id t
 
 let isArray (e:FSharpType) =
   let name = e.NamedEntity.DisplayName

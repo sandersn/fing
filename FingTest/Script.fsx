@@ -2,25 +2,26 @@
 // It can be used to explore and test the library project.
 // Note that script files will not be part of the project build.
 
-#r @"C:\Program Files\FSharpPowerPack-2.0.0.0\\bin\FSharp.PowerPack.Metadata.dll"
-#I @"Y:/src/Fing/Fing/bin/Debug/"
+#r @"C:/Program Files (x86)/FSharpPowerPack-2.0.0.0/bin/FSharp.PowerPack.Metadata.dll"
+#I @"C:/src/Fing/Fing/Fing/bin/Debug/"
 //#r @"Y:/src/Fing/fparsec/main/Build/VS9/bin/Debug/FParsec.dll"
 #r @"FParsec.dll"
 #r @"FParsecCS.dll"
 //#r "Y:/src/Fing/fparsec/main/Build/VS9/bin/Debug/FParsecCS.dll"
-#load @"Y:\src\Fing\Fing\Util.fs"
-#load @"Y:\src\Fing\Fing\Types.fs"
-#load @"Y:\src\Fing\Fing\ParsedTypes.fs"
-#load @"Y:\src\Fing\Fing\FSharpTypes.fs"
-#load @"Y:\src\Fing\Fing\CSharpTypes.fs"
-#load @"Y:\src\Fing\Fing\Parser.fs"
-#load @"Y:\src\Fing\Fing\Search.fs"
-#load @"Y:\src\Fing\Fing\Fing.fs"
+#load @"C:\src\Fing\Fing\Fing\Util.fs"
+#load @"C:\src\Fing\Fing\Fing\Types.fs"
+#load @"C:\src\Fing\Fing\Fing\ParsedTypes.fs"
+#load @"C:\src\Fing\Fing\Fing\FSharpTypes.fs"
+#load @"C:\src\Fing\Fing\Fing\CSharpTypes.fs"
+#load @"C:\src\Fing\Fing\Fing\Parser.fs"
+#load @"C:\src\Fing\Fing\Fing\Search.fs"
+#load @"C:\src\Fing\Fing\Fing\Fing.fs"
+#load @"C:\src\Fing\Fing\FingTest\TestCases.fs"
 // #load "Tester.fs"
 open Types
 open Util
 let core = Microsoft.FSharp.Metadata.FSharpAssembly.FSharpLibrary
-let parsec = Microsoft.FSharp.Metadata.FSharpAssembly.FromFile "Y:/src/Fing/Fing/bin/Debug/FParsec.dll"
+let parsec = Microsoft.FSharp.Metadata.FSharpAssembly.FromFile "C:/src/Fing/Fing/Fing/bin/Debug/FParsec.dll"
 let ts = seq { // Seq.choose id (seq { 
   for e in core.Entities do
   for m in e.MembersOrValues do
